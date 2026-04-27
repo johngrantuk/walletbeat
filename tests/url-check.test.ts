@@ -1649,6 +1649,116 @@ const knownValidUrls: KnownValidUrl[] = [
 		urlHash: '714bfb6cfe3caf2a2d5f47eba1f9d0ca4c04cf25',
 		retrieved: '2026-03-23',
 	},
+	{
+		url: 'https://docs.base.org/get-started/base',
+		urlHash: '81a4a84e30d05861b1624b1db0d00d53c940f3f1',
+		retrieved: '2026-03-19',
+	},
+	{
+		url: 'https://github.com/coinbase/smart-wallet',
+		urlHash: 'bc3738927c2f5aa60b5815802d8011fdf7ffb3fa',
+		retrieved: '2026-03-19',
+	},
+	{
+		url: 'https://github.com/base/account-sdk',
+		urlHash: 'f43270328de1d0f2cc596d9680f994c5fd396ba8',
+		retrieved: '2026-03-19',
+	},
+	{
+		url: 'https://discord.com/invite/buildonbase',
+		urlHash: 'e4e34d04b084b64f573c559eabe6f5c78bf9a480',
+		retrieved: '2026-03-19',
+	},
+	{
+		url: 'https://hackerone.com/coinbase?type=team',
+		urlHash: 'a592f1a22c5c28338d345d29591d4c48ccb25f26',
+		retrieved: '2026-03-19',
+	},
+	{
+		url: 'https://x.com/baseapp',
+		urlHash: 'a39919c5d5cc7eccb1da78806beb96ebffa3e2d3',
+		retrieved: '2026-03-26',
+	},
+	{
+		url: 'https://farcaster.xyz/baseapp.base.eth',
+		urlHash: 'cc08ee93913fafa6cd1f796c8143244dc8cd27ea',
+		retrieved: '2026-03-26',
+	},
+	{
+		url: 'https://base.app/',
+		urlHash: 'a8eaf246359dc850b9d97536ced50a7e577898b3',
+		retrieved: '2026-03-26',
+	},
+	{
+		url: 'https://blog.ambire.com/ambire-supports-safe-accounts/',
+		urlHash: 'c89f9bd364380a9ffd5ff2e7f453e0220296d1d9',
+		retrieved: '2026-03-27',
+	},
+	{
+		url: 'https://wallet.uniswap.org/',
+		urlHash: '53c26e1f58ef41abe6e2eb4eb95ddc1bbbba7629',
+		retrieved: '2026-04-02',
+	},
+	{
+		url: 'https://docs.uniswap.org/',
+		urlHash: 'a3e405706ac38b59e5c1bb138162c977405124c4',
+		retrieved: '2026-04-02',
+	},
+	{
+		url: 'https://github.com/Uniswap',
+		urlHash: '046a7fce9ef8ea6ac8c0d5854f920cb6639afa45',
+		retrieved: '2026-04-02',
+	},
+	{
+		url: 'https://chromewebstore.google.com/detail/uniswap-extension/nnpmfplkfogfpmcngplhnbdnnilmcdcg',
+		urlHash: '97d54b721f1af8144f69b9e89abfd76d8243a5a2',
+		retrieved: '2026-04-02',
+	},
+	{
+		url: 'https://discord.com/invite/uniswap',
+		urlHash: 'f9dc5c01d6d7dd0a07ab46833c0ae1e3c1ac259a',
+		retrieved: '2026-04-02',
+	},
+	{
+		url: 'https://farcaster.xyz/uniswap',
+		urlHash: 'c8299cb24ebec66fffacb45145fc7439e60b4f03',
+		retrieved: '2026-04-02',
+	},
+	{
+		url: 'https://x.com/Uniswap',
+		urlHash: '236d460e150a8fff554beddcc672387e11669452',
+		retrieved: '2026-04-02',
+	},
+	{
+		url: 'https://chromewebstore.google.com/detail/nufi/gpnihlnnodeiiaakbikldcihojploeca',
+		urlHash: 'f3ee58ccad5b73604401c32f5ce451e773809784',
+		retrieved: '2026-03-30',
+	},
+	{
+		url: 'https://chromewebstore.google.com/detail/phantom/bfnaelmomeimhlpmgjnjophhpkkoljpa',
+		urlHash: '1eb054801b62cdf521f2a266ea9336ff6072cab3',
+		retrieved: '2026-03-30',
+	},
+	{
+		url: 'https://chromewebstore.google.com/detail/rainbow/opfgelmcmbiajamepnmloijbpoleiama',
+		urlHash: 'fef14a0fce263eab6abdcf946c39d3e496bff766',
+		retrieved: '2026-03-30',
+	},
+	{
+		url: 'https://chromewebstore.google.com/detail/zerion-wallet-crypto-defi/klghhnkeealcohjjanjjdaeeggmfmlpl',
+		urlHash: 'f4db2da787034114958427804936711fd439e152',
+		retrieved: '2026-03-30',
+	},
+	{
+		url: 'https://raw.githubusercontent.com/MetaMask/metamask-mobile/main/android/app/src/main/AndroidManifest.xml',
+		urlHash: 'da0b34b74deeac2a56309905cb86da9028010e11',
+		retrieved: '2026-03-31',
+	},
+	{
+		url: 'https://raw.githubusercontent.com/MetaMask/metamask-mobile/main/ios/MetaMask/Info.plist',
+		urlHash: '80c424c11a03b5e1610e280ad0d45bdf48768611',
+		retrieved: '2026-03-31',
+	},
 ]
 
 /**
@@ -1667,6 +1777,8 @@ const URLS_TO_SKIP = [
 	'tiktok.com',
 	'web3.bitget.com',
 	'gridplus.io',
+	'coinbase.com',
+	'sec.gov',
 ]
 
 const newValidUrls: string[] = []
@@ -1774,6 +1886,16 @@ describe('reference URLs', () => {
 			it('has valid extensions', async () => {
 				for (const extension of wallet.metadata.urls?.extensions ?? []) {
 					await checkValidUrl(extension)
+				}
+			})
+			it('has valid androidManifestXml', async () => {
+				if (wallet.metadata.urls?.androidManifestXml !== undefined) {
+					await checkValidUrl(wallet.metadata.urls.androidManifestXml)
+				}
+			})
+			it('has valid iosInfoPlist', async () => {
+				if (wallet.metadata.urls?.iosInfoPlist !== undefined) {
+					await checkValidUrl(wallet.metadata.urls.iosInfoPlist)
 				}
 			})
 			it('has valid socials', async () => {

@@ -89,7 +89,7 @@
 								Object.entries(attrGroup.attributes)
 									.filter(([attributeId, _]) => (
 										wallets.find(w => w.variants[Variant.BROWSER] || w.variants[Variant.DESKTOP] || w.variants[Variant.MOBILE])
-											?.overall[attrGroup.id]?.[attributeId]?.evaluation?.value?.rating !== Rating.EXEMPT
+											?.overall[attrGroup.id]?.[attributeId]?.evaluation?.outcome?.rating !== Rating.EXEMPT
 									))
 							)
 						),
@@ -210,7 +210,7 @@
 						return (
 							walletsWithAttribute.length > 0 &&
 							walletsWithAttribute.every(wallet =>
-								wallet.overall[attrGroup.id]?.[attributeId]?.evaluation?.value?.rating === Rating.EXEMPT
+								wallet.overall[attrGroup.id]?.[attributeId]?.evaluation?.outcome?.rating === Rating.EXEMPT
 							)
 						)
 					})
@@ -222,6 +222,7 @@
 
 	// Functions
 	import { variantToName } from '@/constants/variants'
+	import { getWalletUrl } from '@/utils/wallet-url'
 	import { calculateAttributeGroupScore, calculateOverallScore, formatAttributeGroupTitleText } from '@/schema/attribute-groups'
 	import { evaluatedAttributesEntries, ratingToColor, formatAttributeTitleText } from '@/schema/attributes'
 	import { formatScore } from '@/schema/score'
@@ -517,7 +518,7 @@
 											name: attribute.displayName,
 											value: wallet => {
 												const attribute = wallet.overall[attrGroup.id]?.[attributeId]
-												return attribute?.evaluation?.value?.rating || undefined
+												return attribute?.evaluation?.outcome?.rating || undefined
 											},
 											sort: {
 												defaultDirection: SortDirection.Descending,
@@ -675,7 +676,7 @@
 							.filter(variant => variant in wallet.variants)
 					)}
 
-					{@const walletUrl = `/${wallet.metadata.id}/${selectedVariant ? `?variant=${selectedVariant}` : ''}`}
+					{@const walletUrl = getWalletUrl(wallet, { variant: selectedVariant })}
 
 					<TooltipOrAccordion
 						class="wallet-info-details"
@@ -966,16 +967,29 @@
 								radius={80}
 								levels={[
 									{
-										outerRadiusFraction: (summaryVisualization === SummaryVisualization.Score || summaryVisualization === SummaryVisualization.Stage) ? 0.7 : 0.65,
-										innerRadiusFraction: (summaryVisualization === SummaryVisualization.Score || summaryVisualization === SummaryVisualization.Stage) ? 0.3 : 0.1,
+										outerRadiusFraction: 1,
+										innerRadiusFraction: (
+											(summaryVisualization === SummaryVisualization.Score || summaryVisualization === SummaryVisualization.Stage || summaryVisualization === SummaryVisualization.Icon) ?
+												0.15
+											:
+												0.1
+										),
 										gap: 4,
-										angleGap: 0
+										angleGap: 5,
+										offset: 3,
+										outerCornerRadius: 28,
+										innerCornerRadius: 16,
 									},
 									{
-										outerRadiusFraction: 1,
-										innerRadiusFraction: (summaryVisualization === SummaryVisualization.Score || summaryVisualization === SummaryVisualization.Stage) ? 0.725 : 0.675,
-										gap: 2,
-										angleGap: 0,
+										outerRadiusFraction: 0.45,
+										innerRadiusFraction: 0.1,
+										gap: 0,
+										anglePadding: -20,
+										angleGap: -30,
+										offset: 80,
+										outerCornerRadius: 8,
+										innerCornerRadius: 8,
+										labelSize: 11,
 									}
 								]}
 
@@ -1004,7 +1018,7 @@
 													evaluatedAttributesEntries(evalGroup)
 														.filter(([attributeId, attribute]) => (
 															(
-																attribute?.evaluation?.value?.rating !== Rating.EXEMPT
+																attribute?.evaluation?.outcome?.rating !== Rating.EXEMPT
 																|| !attributesExemptForAllWallets.has(`${attrGroup.id}.${attributeId}`)
 															)
 															&& (
@@ -1014,11 +1028,11 @@
 														))
 														.map(([attributeId, attribute]) => ({
 															id: `attrGroup_${attrGroup.id}__attr_${attributeId}`,
-															color: ratingToColor(attribute.evaluation.value.rating),
+															color: ratingToColor(attribute.evaluation.outcome.rating),
 															weight: attrGroup.attributeWeights[attributeId],
-															arcLabel: attribute.evaluation.value.icon ?? attribute.attribute.icon,
+															arcLabel: attribute.evaluation.outcome.icon ?? attribute.attribute.icon,
 															titleText: formatAttributeTitleText(attribute),
-															...attribute.evaluation.value.rating === Rating.EXEMPT && {
+															...attribute.evaluation.outcome.rating === Rating.EXEMPT && {
 																opacity: 0.33,
 															},
 														}))
@@ -1049,42 +1063,38 @@
 							>
 								{#snippet centerContentSnippet()}
 									{#if summaryVisualization === SummaryVisualization.Icon}
-										<image
-											href={`/images/wallets/${wallet.metadata.id}.${wallet.metadata.iconExtension}`}
+										<img
+											src={`/images/wallets/${wallet.metadata.id}.${wallet.metadata.iconExtension}`}
 											width="40"
 											height="40"
-											x="-20"
-											y="-20"
+											alt=""
 										/>
 									{:else if summaryVisualization === SummaryVisualization.Stage}
 										{#if stage && stage !== 'NOT_APPLICABLE' && stage !== 'QUALIFIED_FOR_NO_STAGES' && ladderEvaluation}
 											{@const stageIndex = ladderEvaluation.ladder.stages.findIndex(s => s.id === stage.id)}
 											{@const maxStages = ladderEvaluation.ladder.stages.length}
 											{#if stageIndex >= 0}
-												<text fill={stageToColor(stageIndex, maxStages)}>
-													{stage.label}
-												</text>
+												<span
+													class="pie-center-stage-label"
+												>
+													{stageIndex}
+												</span>
 											{:else}
-												<text>❔</text>
+												<span>❔</span>
 											{/if}
 										{:else}
-											<text>❔</text>
+											<span>❔</span>
 										{/if}
 									{:else if summaryVisualization === SummaryVisualization.Score}
-										<text>
+										<span>
 											{formatScore(score)}
-										</text>
+										</span>
 									{:else if summaryVisualization === SummaryVisualization.ScoreDot}
-										<circle
-											r="4"
-											fill={scoreToColor(score === null ? null : score.score)}
-										>
-											{#if score !== null && score.hasUnratedComponent}
-												<title>
-													*contains unrated components
-												</title>
-											{/if}
-										</circle>
+										<span
+											class="pie-center-dot"
+											style:--pie-center-color={scoreToColor(score === null ? null : score.score)}
+											title={score !== null && score.hasUnratedComponent ? '*contains unrated components' : undefined}
+										></span>
 									{/if}
 								{/snippet}
 							</Pie>
@@ -1154,7 +1164,7 @@
 							evaluatedAttributesEntries(evalGroup)
 								.filter(([attributeId, attribute]) => (
 									(
-										attribute?.evaluation?.value?.rating !== Rating.EXEMPT
+										attribute?.evaluation?.outcome?.rating !== Rating.EXEMPT
 										|| !attributesExemptForAllWallets.has(`${attrGroup.id}.${attributeId}`)
 									)
 									&& (
@@ -1195,9 +1205,18 @@
 								levels={[
 									{
 										outerRadiusFraction: 1,
-										innerRadiusFraction: (summaryVisualization === SummaryVisualization.Score || summaryVisualization === SummaryVisualization.Icon) ? 0.3 : 0.166,
+										innerRadiusFraction: (
+											summaryVisualization === SummaryVisualization.ScoreDot ?
+												0.33
+											: (summaryVisualization === SummaryVisualization.Score || summaryVisualization === SummaryVisualization.Icon) ?
+												0.3
+											:
+												0.166
+										),
 										gap: 3,
-										angleGap: 0
+										angleGap: 0,
+										outerCornerRadius: 12,
+										innerCornerRadius: 12,
 									}
 								]}
 								padding={4}
@@ -1209,7 +1228,7 @@
 									: nonEmptyMap(
 										evalEntries,
 										([attributeId, attribute]) => {
-											const icon = attribute.evaluation.value.icon ?? attribute.attribute.icon
+											const icon = attribute.evaluation.outcome.icon ?? attribute.attribute.icon
 
 											const tooltipSuffix = (() => {
 												const variant = selectedVariant
@@ -1231,11 +1250,11 @@
 
 											return {
 												id: `attrGroup_${attrGroup.id}__attr_${attributeId.toString()}`,
-												color: ratingToColor(attribute.evaluation.value.rating),
+												color: ratingToColor(attribute.evaluation.outcome.rating),
 												weight: attrGroup.attributeWeights[attributeId],
 												arcLabel: icon,
 												titleText: formatAttributeTitleText(attribute, tooltipSuffix),
-												...attribute.evaluation.value.rating === Rating.EXEMPT && {
+												...attribute.evaluation.outcome.rating === Rating.EXEMPT && {
 													opacity: 0.33,
 												},
 											}
@@ -1281,28 +1300,19 @@
 							>
 								{#snippet centerContentSnippet()}
 									{#if summaryVisualization === SummaryVisualization.Icon}
-										<text
-											font-size="24"
-											text-anchor="middle"
-											dominant-baseline="central"
-										>
+										<span class="pie-center-icon">
 											{attrGroup.icon}
-										</text>
+										</span>
 									{:else if summaryVisualization === SummaryVisualization.Score}
-										<text>
+										<span>
 											{formatScore(groupScore)}
-										</text>
+										</span>
 									{:else if summaryVisualization === SummaryVisualization.ScoreDot}
-										<circle
-											r="4"
-											fill={scoreToColor(groupScore === null ? null : groupScore.score)}
-										>
-											{#if groupScore !== null && groupScore.hasUnratedComponent}
-												<title>
-													*contains unrated components
-												</title>
-											{/if}
-										</circle>
+										<span
+											class="pie-center-dot"
+											style:--pie-center-color={scoreToColor(groupScore === null ? null : groupScore.score)}
+											title={groupScore !== null && groupScore.hasUnratedComponent ? '*contains unrated components' : undefined}
+										></span>
 									{/if}
 								{/snippet}
 							</Pie>
@@ -1360,31 +1370,33 @@
 											outerRadiusFraction: 1,
 											innerRadiusFraction: 0.3,
 											offset: (
-												attribute.evaluation.value.rating !== Rating.EXEMPT ?
+												attribute.evaluation.outcome.rating !== Rating.EXEMPT ?
 													20
 												:
 													0
 											),
 											gap: 0,
 											angleGap: 0,
+											outerCornerRadius: 2,
+											innerCornerRadius: 2,
 										}
 									]
 								}
 								padding={
-									attribute.evaluation.value.rating !== Rating.EXEMPT ?
+									attribute.evaluation.outcome.rating !== Rating.EXEMPT ?
 										4
 									:
 										24
 								}
 
-								centerLabel={attribute.evaluation.value.rating}
+								centerLabel={attribute.evaluation.outcome.rating}
 
 								slices={
-									attribute.evaluation.value.rating !== Rating.EXEMPT ?
+									attribute.evaluation.outcome.rating !== Rating.EXEMPT ?
 										[
 											{
 												id: `attrGroup_${attributeGroupId}__attr_${attributeId}`,
-												color: ratingToColor(attribute.evaluation.value.rating),
+												color: ratingToColor(attribute.evaluation.outcome.rating),
 												weight: 1,
 												arcLabel: attribute.icon,
 												titleText: formatAttributeTitleText(attribute),
@@ -1582,6 +1594,23 @@
 
 	.eip-tooltip-content {
 		width: 34rem;
+	}
+
+	.pie-center-stage-label {
+		color: var(--pie-center-color);
+	}
+
+	.pie-center-dot {
+		display: inline-block;
+		width: 16px;
+		height: 16px;
+		border-radius: 50%;
+		background-color: var(--pie-center-color);
+	}
+
+	.pie-center-icon {
+		font-size: 24px;
+		line-height: 1;
 	}
 
 	button:has([data-badge]) {

@@ -28,6 +28,7 @@ import { softwareWallets } from '@/data/software-wallets'
 import { representativeWalletForType } from '@/data/wallets'
 import { mapNonExemptAttributeGroupsInTree } from '@/schema/attribute-groups'
 import { WalletType } from '@/schema/wallet-types'
+import { getWalletUrl } from '@/utils/wallet-url'
 
 // Constants
 export const navigationHome = {
@@ -40,14 +41,14 @@ export const navigationHome = {
 export const navigationFaq = {
 	id: 'faq',
 	icon: HelpCircleIcon,
-	title: 'FAQ',
+	title: 'faq',
 	href: '/faq/',
 } as const satisfies NavigationItem
 
 export const navigationAbout = {
 	id: 'about',
 	icon: BuildingIcon,
-	title: 'About Walletbeat',
+	title: 'about',
 	href: '/about/',
 } as const satisfies NavigationItem
 
@@ -61,7 +62,7 @@ export const navigationCriteria = {
 export const navigationRepository = {
 	id: 'code-repository',
 	icon: GithubIcon,
-	title: 'Contribute on GitHub',
+	title: 'code',
 	href: 'https://github.com/walletbeat/walletbeat',
 } as const satisfies NavigationItem
 
@@ -74,7 +75,7 @@ export const navigationTesting = {
 export const navigationFarcasterChannel = {
 	id: 'farcaster-channel',
 	icon: MessageCircleIcon,
-	title: 'Discuss on Farcaster',
+	title: 'farcaster',
 	href: 'https://farcaster.xyz/~/channel/walletbeat',
 } as const satisfies NavigationItem
 
@@ -85,6 +86,12 @@ export const navigationNews = {
 	href: '/news',
 } as const satisfies NavigationItem
 
+export const topbarNavigationItems = [
+	navigationAbout,
+	navigationFaq,
+	navigationRepository,
+	navigationFarcasterChannel,
+] as const satisfies NavigationItem[]
 export const defaultNavigationItems = [
 	// {
 	// 	...navigationHome,
@@ -116,7 +123,7 @@ export const defaultNavigationItems = [
 				children: Object.entries(softwareWallets).map(([key, wallet]) => ({
 					id: key,
 					title: wallet.metadata.displayName,
-					href: `/${key}/`,
+					href: getWalletUrl(wallet),
 					icon: `<img src="/images/wallets/${wallet.metadata.id}.${wallet.metadata.iconExtension}" alt="" />`,
 				})),
 			},
@@ -157,7 +164,7 @@ export const defaultNavigationItems = [
 				children: Object.entries(hardwareWallets).map(([key, wallet]) => ({
 					id: key,
 					title: wallet.metadata.displayName.replace(' Wallet', ''),
-					href: `/${key}/`,
+					href: getWalletUrl(wallet),
 					icon: `<img src="/images/wallets/${wallet.metadata.id}.${wallet.metadata.iconExtension}" alt="" />`,
 				})),
 			},
@@ -187,12 +194,6 @@ export const defaultNavigationItems = [
 			},
 		],
 	},
-	// 	],
-	// },
 	navigationNews,
-	navigationAbout,
-	navigationFaq,
-	navigationRepository,
 	navigationTesting,
-	navigationFarcasterChannel,
 ] as const satisfies NavigationItem[]
